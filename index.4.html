@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapa Interativo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #mapa { height: 500px; }
+    </style>
+</head>
+<body>
+    <div id="mapa"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Primeiro, inicialize o mapa
+        var mapa = L.map('mapa').setView([-23.5505, -46.6333], 13); // São Paulo, Brasil
+
+        // Adicione uma camada de mapa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(mapa);
+
+        // Adicione uma camada GeoJSON
+        var geojsonFeature = {
+            "type": "Feature",
+            "properties": {
+                "name": "Coors Field",
+                "amenity": "Baseball Stadium",
+                "popupContent": "This is where the Rockies play!"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-46.6333, -23.5505]
+            }
+        };
+
+        L.geoJSON(geojsonFeature, {
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup(feature.properties.popupContent);
+            }
+        }).addTo(mapa);
+    </script>
+</body>
+</html>

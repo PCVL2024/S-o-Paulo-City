@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapa Populacional de São Paulo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <style>
+        #map { height: 100vh; }
+        .info { padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; }
+        .info h4 { margin: 0 0 5px; color: #777; }
+        .legend { line-height: 18px; color: #555; }
+        .legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([-23.5505, -46.6333], 10);  // Coordenadas de São Paulo
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        var info = L.control();
+
+        info.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+
+        info.update = function (props) {
+            this._div.innerHTML = '<h4>População de São Paulo</h4>' +  (props ?
+                '<b>' + props.DISTRITO + '</b><br />' + props.population + ' pessoas'
+                : 'Passe o mouse sobre um distrito');
+        };
+
+        info.addTo(map);
+
+        var legend = L.control({position: 'bottomright'});
+
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'info legend'),
+                grades = [0, 10000, 20000, 50000, 100000, 200000, 500000, 1000000],
+                labels = [];
+
+            for (var i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                    grades[i] + (grades[i + 1] ? '–' + grades[i + 1] + '<br>' : '+');
+            }
+
+            return div;
+        };
+
+        legend.addTo(map);
+
+        // Dados de população para cada distrito
+        var populationData = {
+            'Grajaú': 384873,
+            'Jardim Ângela': 311432,
+            'Capão Redondo': 270767,
+            // ...
+            // Adicione todos os distritos aqui
+            // ...
+            'Pari': 17359,
+            'Marsilac': 11443
+        };
+
+        function getColor(population) {
+            return population > 1000000 ? '#800026' :
+                   population > 500000  ? '#BD0026' :
+                   population > 200000  ? '#E31A1C' :
+                   population > 100000  ? '#FC4E2A' :
+                   population > 50000   ? '#FD8D3C' :
+                   population > 20000   ? '#FEB24C' :
+                   population > 10000   ? '#FED976' :
+                                          '#FFEDA0';
+        }
+
+        function style(feature) {
+            return {
+                fillColor: getColor(populationData[feature.properties.DISTRITO]),
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        }
+
+        function highlightFeature(e) {
+            var layer = e.target;
+
+            layer.setStyle({
+                weight: 5,
+                color: '#666',
+                dashArray: '',
+                fillOpacity: 0.7
+            });
+
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                layer.bringToFront();
+            }
+
+            info.update(layer.feature.properties);
+        }
+
+        function resetHighlight(e) {
+            geojson.resetStyle(e.target);
+            info.update();
+        }
+
+        function onEachFeature(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+            });
+        }
+
+        var geojson;
+
+        fetch('https://gist.githubusercontent.com/pedro-valentim/ad15a982b1c421ff1a236dcffbe30461/raw/7566bec5fbcc59aec1f253ac012101b5b4039f8d/saopaulo_subprefeituras_poligonos.geojson')
+            .then(response => response.json())
+            .then(data => {
+                geojson = L.geoJSON(data, {
+                    style: style,
+                    onEachFeature: onEachFeature
+                }).addTo(map);
+            });
+    </script>
+</body>
+</html>
+
+
+

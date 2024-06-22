@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Calor - São Paulo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+</head>
+<body>
+    <style>
+        body {
+    margin: 0;
+    padding: 0;
+}
+
+#map {
+    height: 100vh;
+    width: 100%;
+}
+
+    </style>
+    <div id="map"></div>
+    <script src="script.js"></script>
+    <script>
+      // Inicializando o mapa
+var map = L.map('map').setView([-23.55052, -46.633308], 11); // Coordenadas de São Paulo
+
+// Adicionando a camada de tiles do OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+// Dados dos setores censitários com população e nomes dos bairros
+var setoresCensitarios = [
+    { distrito: "Grajaú", populacao: 384873, latitude: -23.7768, longitude: -46.6643 },
+    { distrito: "Jardim Ângela", populacao: 311432, latitude: -23.7129, longitude: -46.7638 },
+    // Adicione aqui os demais dados...
+];
+
+// Convertendo os dados para o formato de heatmap (latitude, longitude, intensidade)
+var heatData = setoresCensitarios.map(function(setor) {
+    return [setor.latitude, setor.longitude, setor.populacao / 1000]; // Dividindo a população por 1000 para facilitar a visualização
+});
+
+// Adicionando o heatmap ao mapa
+var heat = L.heatLayer(heatData, {
+    radius: 25,
+    blur: 15,
+    maxZoom: 17,
+}).addTo(map);
+
+// Adicionando os nomes dos bairros como marcadores
+setoresCensitarios.forEach(function(setor) {
+    L.marker([setor.latitude, setor.longitude])
+        .bindPopup(setor.distrito + "<br>População: " + setor.populacao)
+        .addTo(map);
+});
+
+    </script>
+</body>
+</html>
+
+
